@@ -1,0 +1,72 @@
+
+experimento:
+  versao_config: "1.1"
+  fase: 0
+  semente: 42
+  modelo: claude-sonnet-5-5
+  temperatura: 0.3            # validar na Fase 1
+  repeticoes: 2
+  max_tentativas: 6
+  condicoes:
+    C1: {misconception: [id, nome]}
+    C2: {misconception: [id, nome, descricao, exemplo_incorreto, exemplo_correto]}
+  insumo_fixo: [enunciado, codigo_solucao]   # sem casos de teste no prompt
+
+dados:
+  origem: banco_original      
+  modelo_gerador_banco: gpt-5.6-luna   # confirmar string exata na Fase 1
+  fonte_questoes: llm_outra_familia_com_revisao_humana
+  modulos:
+    M1: {topico: funcoes_parametros_retorno,  pool: 10, amostra: 8}
+    M2: {topico: escopo_de_variaveis,         pool: 8,  amostra: 6}
+    M3: {topico: condicionais_booleanas,      pool: 8,  amostra: 6}
+    M4: {topico: repeticao_por_condicao,      pool: 10, amostra: 8}
+    M5: {topico: repeticao_por_contagem,      pool: 10, amostra: 8}
+    M6: {topico: vetores_strings_metodos,     pool: 10, amostra: 8}
+  validacao: [solucao_passa_nos_testes, cobertura_100_linhas, revisao_humana_enunciado]
+
+catalogo:
+  fonte: caceffo_2026
+  status_misconceptions: hipoteses_nao_validadas
+  excluidas: [PG.3, X.8, X.10, X.11, X.12, X.14, X.16]
+  misconceptions:
+    k: 3
+    distratores_por_questao: 3   # 1 por misconception
+    sorteio_congelado_por_questao: true
+  aplicabilidade:
+    M1: [PA.1, PA.3, PA.5, PB.6, PH.3]
+    M2: [PB.1, PB.3, PA.3, PB.5]
+    M3: [PG.1, PG.2, PG.4]            # PG.2: nao gera erro de execucao
+    M4: [PD.1, PD.2, PD.3, PD.4, PD.5, PD.6, PG.4]
+    M5: [PD.1, PD.2, PD.3, PD.4, PD.7, PD.8, PB.5]
+    M6: [PH.1, PH.2, PH.4, PH.5, PD.7, PD.8]
+
+amostra:
+  sorteio_na_fase: 2
+  n_total: 44
+  inclusao:
+    - solucao_passa_nos_testes_do_banco
+    - minimo_3_linhas_de_logica
+    - minimo_3_misconceptions_aplicaveis
+  reposicao: mesmo_modulo_mesma_semente_registrada
+
+avaliacao_julgamento:
+  humano: {avaliadores: 1, questoes: 12, repeticao: 1}
+  ia:
+    papel: segundo_avaliador
+    modelo: gemini-pro-3.1           # confirmar string exata na Fase 1
+    familia: diferente_do_gerador_e_do_banco
+    temperatura: 0
+    concordancia: [cohen_kappa_humano_ia, percentual_simples, ic]
+  correspondencia: {opcoes: 9, composicao: {origem: 1, outras_da_questao: 2, iscas: 5, nenhuma_outra: 1}}
+
+metricas_automaticas:
+  distrator_valido: mutante_falha_em_algum_teste
+  sintaxe_reportada_a_parte: true
+  mutante_equivalente: encaminhar_para_julgamento_humano
+
+estatistica:
+  teste_binario: mcnemar
+  teste_ordinal: wilcoxon_pareado
+  reportar: [tamanho_de_efeito, ic, potencia_observada]
+  juiz_ia: analise_de_apoio
